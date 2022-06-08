@@ -7,8 +7,8 @@ on:
   #push:
   #  branches:
   #    - main
-  #schedule:
-  #  - cron: '52 23 * * 5'
+  schedule:
+    - cron: '52 23 * * 5'
   workflow_dispatch:
     inputs:
       mode:
@@ -18,6 +18,10 @@ env:
   ANCHORE_CLI_USER: ${{ secrets.ANCHORE_CLI_USER }}
   ANCHORE_CLI_PASS: ${{ secrets.ANCHORE_CLI_PASS }}
   ANCHORE_CLI_URL: ${{ secrets.ANCHORE_CLI_URL }}
+  IMAGE_REGISTRY: ghcr.io
+  IMAGE_REGISTRY_REPO: ${IMAGE_REGISTRY}/${GITHUB_REPOSITORY}
+  IMAGE_REGISTRY_REPO_TAG: ${IMAGE_REGISTRY}/${GITHUB_REPOSITORY,,}:{GITHUB_REF_NAME}
+
   
 jobs:
 
@@ -26,45 +30,14 @@ jobs:
     steps:
     - name: Checkout Code
       uses: actions/checkout@v2
+    - name: Debug Registry Var
+      run: echo "$IMAGE_REGISTRY"
+    - name: Debug Registry Repo Var
+      run: echo "$IMAGE_REGISTRY_REPO"
+    - name: Debug Registry Repository Tag Var
+      run: echo "$IMAGE_REGISTRY_REPO_TAG"
     - name: Login to ghcr.io
       run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${GITHUB_ACTOR} --password-stdin
-    - name: Build Docker Image
-      run: |
-        docker build . --file Dockerfile --tag ghcr.io/${GITHUB_REPOSITORY,,}:${GITHUB_REF_NAME}
-    - name: Push Docker Image
-      run: |
-        docker push ghcr.io/${GITHUB_REPOSITORY,,}:${GITHUB_REF_NAME}
-    - name: Archive Dockerfile
-      uses: actions/upload-artifact@v2
-      with:
-        name: Dockerfile
-        path: Dockerfile
-        retention-days: 2
+      
 
-  Scan-Analyze:
-    needs: Build-Push
-    runs-on: ubuntu-latest
-    steps:
-    - name: Download Dockerfile Artifact 
-      uses: actions/download-artifact@v2
-      with:
-        name: Dockerfile
-    - name: Install anchore-cli
-      run: |
-        sudo apt-get install python3-pip
-        pip install anchorecli
-        export PATH="$HOME/.local/bin/:$PATH"
-    - name: Verify Anchore Ready and Reachable
-      run: |
-        anchore-cli system status 
-    - name: Add to Enterprise Queue
-      run: | 
-        anchore-cli image add --noautosubscribe --dockerfile ./Dockerfile ghcr.io/${GITHUB_REPOSITORY,,}:${GITHUB_REF_NAME}
-    - name: Wait for Enterprise Analysis
-      run: |
-        anchore-cli image wait ghcr.io/${GITHUB_REPOSITORY,,}:${GITHUB_REF_NAME}
-    - name: Activate Policy and Vulnerability Subscriptions
-      run: |
-        anchore-cli subscription activate policy_eval ghcr.io/${GITHUB_REPOSITORY,,}:${GITHUB_REF_NAME}
-        anchore-cli subscription activate vuln_update ghcr.io/${GITHUB_REPOSITORY,,}:${GITHUB_REF_NAME}
 
