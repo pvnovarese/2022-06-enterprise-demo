@@ -5,7 +5,7 @@
 # 1) add evaluate check (when available)
 # 2) toggle subscriptions (when available)
 # 3) (possibly) use my own anchore-tools iamge instead of ubuntu 
-#    plus installing anchorctl
+#    plus installing anchorectl
 # 4) add annotation to note build tool (when available)
 
 name: Only anchorectl
@@ -35,7 +35,7 @@ jobs:
     - name: "Set environmental variables"
       run: |
         echo "IMAGE_SHA=${IMAGE_REGISTRY}/${GITHUB_REPOSITORY}:gh-anchorectl-${GITHUB_SHA}" >> $GITHUB_ENV
-        echo "IMAGE=${IMAGE_REGISTRY}/${GITHUB_REPOSITORY}:gh-anchorctl-${GITHUB_REF_NAME}" >> $GITHUB_ENV
+        echo "IMAGE=${IMAGE_REGISTRY}/${GITHUB_REPOSITORY}:gh-anchorectl-${GITHUB_REF_NAME}" >> $GITHUB_ENV
         
     - name: Checkout Code
       uses: actions/checkout@v2
