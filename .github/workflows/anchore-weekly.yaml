@@ -83,7 +83,7 @@ jobs:
         echo "IMAGE=${IMAGE_REGISTRY}/${GITHUB_REPOSITORY}:${IMAGE_TAG}" >> $GITHUB_ENV
     
     - name: Download Dockerfile Artifact 
-      uses: actions/download-artifact@v2
+      uses: actions/download-artifact@v4
       with:
         name: Dockerfile
         
